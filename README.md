@@ -7,6 +7,8 @@
 
 &nbsp;
 
+</div>
+
 ## Covalent Custom Executor Plugin
 
 This is a short description of this plugin.
