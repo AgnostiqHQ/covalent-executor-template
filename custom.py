@@ -19,8 +19,8 @@ from covalent._shared_files import logger
 app_log = logger.app_log
 log_stack_info = logger.log_stack_info
 
-# Results of operations take the form of io.StringIO objects.
-# These modules are used to capture those results.
+# These modules are used to capture print/logging statements
+# inside electron definitions.
 import io
 from contextlib import redirect_stderr, redirect_stdout
 
@@ -100,14 +100,15 @@ class CustomExecutor(BaseExecutor):
         external_object = ExternalClass(3)
         app_log.debug(external_object.multiplier)
 
-        # Here we simply execute the function on the local machine.
-        # But this could be sent to a more capable machine for the operation,
-        # or a different Python virtual environment, or more.
         with self.get_dispatch_context(DispatchInfo(dispatch_id)), redirect_stdout(
             io.StringIO()
         ) as stdout, redirect_stderr(io.StringIO()) as stderr:
+            # Here we simply execute the function on the local machine.
+            # But this could be sent to a more capable machine for the operation,
+            # or a different Python virtual environment, or more.
             result = fn(**kwargs)
 
+        # Other custom operations can be applied here.
         result = self.helper_function(result)
 
         debug_message = f"Function '{fn.__name__}' was executed on node {node_id} with execution arguments {execution_args}"
