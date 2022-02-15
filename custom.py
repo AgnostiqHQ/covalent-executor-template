@@ -100,6 +100,7 @@ class CustomExecutor(BaseExecutor):
         external_object = ExternalClass(3)
         app_log.debug(external_object.multiplier)
 
+        logs, errors = "", ""
         with self.get_dispatch_context(DispatchInfo(dispatch_id)), redirect_stdout(
             io.StringIO()
         ) as stdout, redirect_stderr(io.StringIO()) as stderr:
@@ -108,13 +109,15 @@ class CustomExecutor(BaseExecutor):
             # or a different Python virtual environment, or more.
             result = fn(**kwargs)
 
+            logs, errors = stdout.getvalue(), stderr.getvalue()
+
         # Other custom operations can be applied here.
         result = self.helper_function(result)
 
         debug_message = f"Function '{fn.__name__}' was executed on node {node_id} with execution arguments {execution_args}"
         app_log.debug(debug_message)
 
-        return (result, stdout.getvalue(), stderr.getvalue())
+        return (result, logs, errors)
 
     def helper_function(self, result):
         return 2 * result
