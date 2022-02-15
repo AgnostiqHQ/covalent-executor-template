@@ -2,8 +2,9 @@
 #
 # This file is a part of Covalent Cloud.
 
-# All executor plugins inherit from the BaseExecutor base class.
-from covalent.executor import BaseExecutor
+# The covalent logger module is a simple wrapper around the
+# standard Python logging module.
+from covalent._shared_files import logger
 
 # DispatchInfo objects are used to share info of a dispatched computation between different
 # tasks (electrons) of the workflow (lattice).
@@ -13,9 +14,9 @@ from covalent._shared_files.util_classes import DispatchInfo
 # This import is not strictly necessary, as it is only used for type-hints.
 from covalent._workflow.transport import TransportableObject
 
-# The covalent logger module is a simple wrapper around the
-# standard Python logging module.
-from covalent._shared_files import logger
+# All executor plugins inherit from the BaseExecutor base class.
+from covalent.executor import BaseExecutor
+
 app_log = logger.app_log
 log_stack_info = logger.log_stack_info
 
@@ -40,7 +41,6 @@ class CustomExecutor(BaseExecutor):
         executor_input2: int = 0,
         *args,
         **kwargs,
-
     ) -> None:
         self.executor_input1 = executor_input1
         self.executor_input2 = executor_input2
@@ -62,7 +62,6 @@ class CustomExecutor(BaseExecutor):
                 base_kwargs[key] = self.kwargs[key]
 
         super().__init__(**base_kwargs)
-    
 
     def execute(
         self,
@@ -100,7 +99,6 @@ class CustomExecutor(BaseExecutor):
         external_object = ExternalClass(3)
         app_log.debug(external_object.multiplier)
 
-        logs, errors = "", ""
         with self.get_dispatch_context(DispatchInfo(dispatch_id)), redirect_stdout(
             io.StringIO()
         ) as stdout, redirect_stderr(io.StringIO()) as stderr:
@@ -109,15 +107,13 @@ class CustomExecutor(BaseExecutor):
             # or a different Python virtual environment, or more.
             result = fn(**kwargs)
 
-            logs, errors = stdout.getvalue(), stderr.getvalue()
-
         # Other custom operations can be applied here.
         result = self.helper_function(result)
 
         debug_message = f"Function '{fn.__name__}' was executed on node {node_id} with execution arguments {execution_args}"
         app_log.debug(debug_message)
 
-        return (result, logs, errors)
+        return (result, stdout.getvalue(), stderr.getvalue())
 
     def helper_function(self, result):
         return 2 * result
