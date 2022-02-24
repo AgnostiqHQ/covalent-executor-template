@@ -44,7 +44,7 @@ import io
 from contextlib import redirect_stderr, redirect_stdout
 
 # For type-hints
-from typing import Any
+from typing import Any, Dict, List
 
 # The plugin class name must be given by the executor_plugin_name attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
@@ -84,9 +84,10 @@ class CustomExecutor(BaseExecutor):
     def execute(
         self,
         function: TransportableObject,
-        kwargs: Any,
-        execution_args: dict,
+        args: List,
+        kwargs: Dict,
         dispatch_id: str,
+        results_dir: str,
         node_id: int = -1,
     ) -> Any:
 
@@ -96,10 +97,11 @@ class CustomExecutor(BaseExecutor):
         Args:
             function: The input (serialized) python function which will be executed and
                 whose result is ultimately returned by this function.
+            args: Positional arguments to be used by the function.
             kwargs: Keyword arguments to be used by function.
-            execution_args: Executor-specific arguments.
             dispatch_id: The unique identifier of the external lattice process which is
                 calling this function.
+            results_dir: The location of the results directory.
             node_id: The node ID of this task in the workflow graph.
 
         Returns:
@@ -123,12 +125,12 @@ class CustomExecutor(BaseExecutor):
             # Here we simply execute the function on the local machine.
             # But this could be sent to a more capable machine for the operation,
             # or a different Python virtual environment, or more.
-            result = fn(**kwargs)
+            result = fn(*args, **kwargs)
 
         # Other custom operations can be applied here.
         result = self.helper_function(result)
 
-        debug_message = f"Function '{fn.__name__}' was executed on node {node_id} with execution arguments {execution_args}"
+        debug_message = f"Function '{fn.__name__}' was executed on node {node_id}"
         app_log.debug(debug_message)
 
         return (result, stdout.getvalue(), stderr.getvalue())
