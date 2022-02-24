@@ -1,6 +1,24 @@
 # Copyright 2021 Agnostiq Inc.
 #
-# This file is a part of Covalent Cloud.
+# This file is part of Covalent.
+#
+# Licensed under the GNU Affero General Public License 3.0 (the "License").
+# A copy of the License may be obtained with this software package or at
+#
+#      https://www.gnu.org/licenses/agpl-3.0.en.html
+#
+# Use of this file is prohibited except in compliance with the License. Any
+# modifications or derivative works of this file must retain this copyright
+# notice, and modified files must contain a notice indicating that they have
+# been altered from the originals.
+#
+# Covalent is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the License for more details.
+#
+# Relief from the License may be granted by purchasing a commercial license.
+
+"""This is an example of a custom Covalent executor plugin."""
 
 # The covalent logger module is a simple wrapper around the
 # standard Python logging module.
@@ -26,7 +44,7 @@ import io
 from contextlib import redirect_stderr, redirect_stdout
 
 # For type-hints
-from typing import Any
+from typing import Any, Dict, List
 
 # The plugin class name must be given by the executor_plugin_name attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
@@ -66,9 +84,10 @@ class CustomExecutor(BaseExecutor):
     def execute(
         self,
         function: TransportableObject,
-        kwargs: Any,
-        execution_args: dict,
+        args: List,
+        kwargs: Dict,
         dispatch_id: str,
+        results_dir: str,
         node_id: int = -1,
     ) -> Any:
 
@@ -78,10 +97,11 @@ class CustomExecutor(BaseExecutor):
         Args:
             function: The input (serialized) python function which will be executed and
                 whose result is ultimately returned by this function.
+            args: Positional arguments to be used by the function.
             kwargs: Keyword arguments to be used by function.
-            execution_args: Executor-specific arguments.
             dispatch_id: The unique identifier of the external lattice process which is
                 calling this function.
+            results_dir: The location of the results directory.
             node_id: The node ID of this task in the workflow graph.
 
         Returns:
@@ -105,12 +125,12 @@ class CustomExecutor(BaseExecutor):
             # Here we simply execute the function on the local machine.
             # But this could be sent to a more capable machine for the operation,
             # or a different Python virtual environment, or more.
-            result = fn(**kwargs)
+            result = fn(*args, **kwargs)
 
         # Other custom operations can be applied here.
         result = self.helper_function(result)
 
-        debug_message = f"Function '{fn.__name__}' was executed on node {node_id} with execution arguments {execution_args}"
+        debug_message = f"Function '{fn.__name__}' was executed on node {node_id}"
         app_log.debug(debug_message)
 
         return (result, stdout.getvalue(), stderr.getvalue())

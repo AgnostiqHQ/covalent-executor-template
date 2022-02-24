@@ -1,6 +1,22 @@
 # Copyright 2021 Agnostiq Inc.
 #
-# This file is part of Covalent Cloud.
+# This file is part of Covalent.
+#
+# Licensed under the GNU Affero General Public License 3.0 (the "License").
+# A copy of the License may be obtained with this software package or at
+#
+#      https://www.gnu.org/licenses/agpl-3.0.en.html
+#
+# Use of this file is prohibited except in compliance with the License. Any
+# modifications or derivative works of this file must retain this copyright
+# notice, and modified files must contain a notice indicating that they have
+# been altered from the originals.
+#
+# Covalent is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the License for more details.
+#
+# Relief from the License may be granted by purchasing a commercial license.
 
 import site
 from setuptools import find_packages, setup
@@ -13,17 +29,19 @@ with open("VERSION") as f:
 with open("requirements.txt") as f:
     required = f.read().splitlines()
 
+# Modify this to be the name of your plugin file
 plugins_list = ["custom = custom"]
 
 setup_info = {
-    # Add this to covalent's extra_requires to install as `pip install cova[custom]`
-    "name": "covalent-custom-plugin", 
+    # Your plugin should use the naming convention 'covalent-abcdef-plugin'
+    "name": "covalent-executor-template", 
     "packages": find_packages("."),
     "version": version,
+    # Modify any contact information as you see fit
     "maintainer": "Agnostiq",
-    "url": "https://github.com/AgnostiqHQ/covalent-custom-plugin",
-    "download_url": f"https://github.com/AgnostiqHQ/covalent-custom-plugin/archive/v{version}.tar.gz",
-    "license": "Proprietary",
+    "url": "https://github.com/AgnostiqHQ/covalent-executor-template",
+    "download_url": f"https://github.com/AgnostiqHQ/covalent-executor-template/archive/v{version}.tar.gz",
+    "license": "GNU Affero GPL v3.0",
     "author": "Agnostiq",
     "author_email": "support@agnostiq.ai",
     "description": "Covalent Custom Executor Plugin",
@@ -32,7 +50,7 @@ setup_info = {
     "include_package_data": True,
     "install_requires": required,
     "classifiers": [
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Environment :: Plugins",
         "Intended Audience :: Developers",

@@ -18,22 +18,10 @@
 #
 # Relief from the License may be granted by purchasing a commercial license.
 
-[tool.black]
-target_version = ['py38']
-line-length = 99
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.tox
-  | \.venv
-)/
-'''
+# CODEOWNERS
 
-[tool.isort]
-py_version = 38
-line_length = 99
-multi_line_output = 3
-include_trailing_comma = true
-profile = 'black'
-skip_gitignore = true
+# Modifying these requires additional approval
+.github/**		@AgnostiqHQ/aq-managers
+LICENSE			@AgnostiqHQ/aq-managers
+**/requirements.txt	@AgnostiqHQ/aq-managers
+setup.py		@AgnostiqHQ/aq-managers
