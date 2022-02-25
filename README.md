@@ -7,11 +7,6 @@
 
 &nbsp;
 
-![version](https://img.shields.io/github/v/release/AgnostiqHQ/covalent-executor-template?color=navy&label=version)
-![python](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)
-![forks](https://img.shields.io/github/forks/AgnostiqHQ/covalent-executor-template?style=social)
-[![agpl](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.en.html)
-
 </div>
 
 ## Covalent Executor Plugins
