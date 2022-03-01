@@ -19,6 +19,8 @@
 # Relief from the License may be granted by purchasing a commercial license.
 
 import site
+import sys
+
 from setuptools import find_packages, setup
 
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
@@ -34,7 +36,7 @@ plugins_list = ["custom = custom"]
 
 setup_info = {
     # Your plugin should use the naming convention 'covalent-abcdef-plugin'
-    "name": "covalent-executor-template", 
+    "name": "covalent-executor-template",
     "packages": find_packages("."),
     "version": version,
     # Modify any contact information as you see fit
@@ -45,7 +47,7 @@ setup_info = {
     "author": "Agnostiq",
     "author_email": "support@agnostiq.ai",
     "description": "Covalent Custom Executor Plugin",
-    "long_description": open("README.md").read()
+    "long_description": open("README.md").read(),
     "long_description_content_type": "text/markdown",
     "include_package_data": True,
     "install_requires": required,
@@ -69,7 +71,7 @@ setup_info = {
         "Topic :: Software Development",
         "Topic :: System :: Distributed Computing",
     ],
-    entry_points: {
+    "entry_points": {
         "covalent.executor.executor_plugins": plugins_list,
     },
 }
