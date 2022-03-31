@@ -50,6 +50,10 @@ log_stack_info = logger.log_stack_info
 # module has more than one class defined, this lets Covalent know which is the executor class.
 executor_plugin_name = "CustomExecutor"
 
+_EXECUTOR_PLUGIN_DEFAULTS = {
+    "executor_input1": "",
+    "executor_input2": "",
+}
 
 class CustomExecutor(BaseExecutor):
     def __init__(
