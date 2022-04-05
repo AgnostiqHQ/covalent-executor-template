@@ -46,10 +46,14 @@ from covalent.executor import BaseExecutor
 app_log = logger.app_log
 log_stack_info = logger.log_stack_info
 
-# The plugin class name must be given by the executor_plugin_name attribute. In case this
+# The plugin class name must be given by the EXECUTOR_PLUGIN_NAME attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
-executor_plugin_name = "CustomExecutor"
+EXECUTOR_PLUGIN_NAME = "CustomExecutor"
 
+_EXECUTOR_PLUGIN_DEFAULTS = {
+    "executor_input1": "",
+    "executor_input2": "",
+}
 
 class CustomExecutor(BaseExecutor):
     def __init__(

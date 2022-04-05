@@ -25,14 +25,17 @@ from setuptools import find_packages, setup
 
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
+# When updating, VERSION should be set to that of the latest
+# covalent-executor-template (ie, this package).
 with open("VERSION") as f:
     version = f.read().strip()
 
 with open("requirements.txt") as f:
     required = f.read().splitlines()
 
-# Modify this to be the name of your plugin file
-plugins_list = ["custom = custom"]
+# Modify this to be the name of your plugin file. Here, "covalent_executor_template"
+# is the name of the directory the plugin is in. "custom" is name of the module.
+plugins_list = ["custom = covalent_executor_template.custom"]
 
 setup_info = {
     # Your plugin should use the naming convention 'covalent-abcdef-plugin'
