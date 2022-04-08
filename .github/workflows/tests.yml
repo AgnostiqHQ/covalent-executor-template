@@ -24,7 +24,7 @@ on:
   pull_request:
   push:
     branches:
-      - develop
+      - main
 
 jobs:
   tests:
@@ -59,16 +59,8 @@ jobs:
         run: |
           pip install --no-cache-dir -r ./requirements.txt
       - name: Install Covalent
-        run: pip install cova --pre
+        run: pip install cova
       - name: Install Template Plugin
         run: pip install -e .
       - name: Test plugin loading
         run: python -c "from covalent.executor import CustomExecutor"
-      - name: Push to main
-        if: github.ref == 'refs/heads/develop' && matrix.os == 'ubuntu-latest' && matrix.container == 'python:3.8-buster'
-        run: |
-          git config user.name "CovalentOpsBot"
-          git config user.email "covalentopsbot@users.noreply.github.com"
-          git remote set-url origin https://${{ secrets.COVALENT_OPS_BOT_TOKEN }}@github.com/AgnostiqHQ/covalent-executor-template.git
-          git fetch --unshallow
-          git push origin HEAD:main
