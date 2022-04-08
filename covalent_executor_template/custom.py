@@ -48,7 +48,7 @@ log_stack_info = logger.log_stack_info
 
 # The plugin class name must be given by the EXECUTOR_PLUGIN_NAME attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
-EXECUTOR_PLUGIN_NAME = "CustomExecutor"
+executor_plugin_name = "CustomExecutor"
 
 _EXECUTOR_PLUGIN_DEFAULTS = {
     "executor_input1": "",
