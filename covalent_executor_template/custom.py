@@ -148,7 +148,8 @@ class CustomExecutor(BaseExecutor):
                 exception = e
 
         # Other custom operations can be applied here.
-        result = self.helper_function(result)
+        if result is not None:
+            result = self.helper_function(result)
 
         debug_message = f"Function '{fn.__name__}' was executed on node {task_id}"
         app_log.debug(debug_message)
