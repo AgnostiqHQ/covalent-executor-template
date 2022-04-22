@@ -26,8 +26,14 @@
 import io
 from contextlib import redirect_stderr, redirect_stdout
 
+# multiprocessing Queue objects are used for sharing variables across processes.
+from multiprocessing import Queue as MPQ
+
 # For type-hints
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
+
+# The current status of the execution can be kept up-to-date with Covalent Result objects.
+from covalent._results_manager.result import Result
 
 # Covalent logger
 from covalent._shared_files import logger
@@ -55,6 +61,7 @@ _EXECUTOR_PLUGIN_DEFAULTS = {
     "executor_input2": "",
 }
 
+
 class CustomExecutor(BaseExecutor):
     def __init__(
         # Inputs to an executor can be positional or keyword arguments.
@@ -73,8 +80,6 @@ class CustomExecutor(BaseExecutor):
         base_kwargs = {}
         for key, _ in self.kwargs.items():
             if key in [
-                "log_stdout",
-                "log_stderr",
                 "conda_env",
                 "cache_dir",
                 "current_env_on_conda_fail",
@@ -88,9 +93,10 @@ class CustomExecutor(BaseExecutor):
         function: TransportableObject,
         args: List,
         kwargs: Dict,
+        info_queue: MPQ,
+        task_id: int,
         dispatch_id: str,
         results_dir: str,
-        node_id: int = -1,
     ) -> Any:
 
         """
@@ -99,12 +105,14 @@ class CustomExecutor(BaseExecutor):
         Args:
             function: The input (serialized) python function which will be executed and
                 whose result is ultimately returned by this function.
-            args: Positional arguments to be used by the function.
-            kwargs: Keyword arguments to be used by function.
+            args: List of positional arguments to be used by the function.
+            kwargs: Dictionary of keyword arguments to be used by the function.
+            info_queue: A multiprocessing Queue object used for shared variables across
+                processes. Information about, eg, status, can be stored here.
+            task_id: The ID of this task in the bigger workflow graph.
             dispatch_id: The unique identifier of the external lattice process which is
                 calling this function.
             results_dir: The location of the results directory.
-            node_id: The node ID of this task in the workflow graph.
 
         Returns:
             output: The result of the executed function.
@@ -121,36 +129,71 @@ class CustomExecutor(BaseExecutor):
         external_object = ExternalClass(3)
         app_log.debug(external_object.multiplier)
 
+        # Store the current status to this shared-between-processes object.
+        info_dict = {"STATUS": Result.RUNNING}
+        info_queue.put_nowait(info_dict)
+
+        result = None
+        exception = None
+
         with self.get_dispatch_context(DispatchInfo(dispatch_id)), redirect_stdout(
             io.StringIO()
         ) as stdout, redirect_stderr(io.StringIO()) as stderr:
             # Here we simply execute the function on the local machine.
             # But this could be sent to a more capable machine for the operation,
             # or a different Python virtual environment, or more.
-            result = fn(*args, **kwargs)
+            try:
+                result = fn(*args, **kwargs)
+            except Exception as e:
+                exception = e
 
         # Other custom operations can be applied here.
-        result = self.helper_function(result)
+        if result is not None:
+            result = self.helper_function(result)
 
-        debug_message = f"Function '{fn.__name__}' was executed on node {node_id}"
+        debug_message = f"Function '{fn.__name__}' was executed on node {task_id}"
         app_log.debug(debug_message)
 
-        return (result, stdout.getvalue(), stderr.getvalue())
+        # Update the status:
+        info_dict = info_queue.get()
+        info_dict["STATUS"] = Result.FAILED if result is None else Result.COMPLETED
+        info_queue.put(info_dict)
 
-    def get_status(self, job_id: str) -> str:
-        """Return the status of an asynchronous task."""
-
-        raise NotImplementedError
-
-    def cancel(self, job_id: str) -> str:
-        """Cancel an asynchronous task."""
-
-        raise NotImplementedError
+        return (result, stdout.getvalue(), stderr.getvalue(), exception)
 
     def helper_function(self, result):
         """An example helper function."""
 
         return 2 * result
+
+    def get_status(self, info_dict: dict) -> Result:
+        """
+        Get the current status of the task.
+
+        Args:
+            info_dict: a dictionary containing any neccessary parameters needed to query the
+                status. For this class (LocalExecutor), the only info is given by the
+                "STATUS" key in info_dict.
+
+        Returns:
+            A Result status object (or None, if "STATUS" is not in info_dict).
+        """
+
+        return info_dict.get("STATUS", Result.NEW_OBJ)
+
+    def cancel(self, info_dict: dict = {}) -> Tuple[Any, str, str]:
+        """
+        Cancel the execution task.
+
+        Args:
+            info_dict: a dictionary containing any neccessary parameters
+                needed to halt the task execution.
+
+        Returns:
+            Null values in the same structure as a successful return value (a 4-element tuple).
+        """
+
+        return (None, "", "", InterruptedError)
 
 
 # This class can be used in the custom executor, but will be ignored by the
