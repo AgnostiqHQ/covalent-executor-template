@@ -18,7 +18,7 @@
 #
 # Relief from the License may be granted by purchasing a commercial license.
 
-"""This is an example of a custom Covalent executor plugin."""
+"""This is an example of a custom Covalent async-aware executor plugin."""
 
 # For type-hints
 from typing import Any, Dict, List, Callable
@@ -27,11 +27,11 @@ from typing import Any, Dict, List, Callable
 from covalent._results_manager.result import Result
 
 # All executor plugins inherit either from the `BaseExecutor` class, or the `BaseAsyncExecutor` class.
-from covalent.executor.base import BaseExecutor
+from covalent.executor.base import BaseAsyncExecutor
 
 # The plugin class name must be given by the EXECUTOR_PLUGIN_NAME attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
-EXECUTOR_PLUGIN_NAME = "CustomExecutor"
+EXECUTOR_PLUGIN_NAME = "CustomAsyncExecutor"
 
 _EXECUTOR_PLUGIN_DEFAULTS = {
     "executor_input1": "",
@@ -39,7 +39,7 @@ _EXECUTOR_PLUGIN_DEFAULTS = {
 }
 
 
-class CustomExecutor(BaseExecutor):
+class CustomAsyncExecutor(BaseAsyncExecutor):
     def __init__(
         self,
         executor_input1: str,
@@ -53,10 +53,10 @@ class CustomExecutor(BaseExecutor):
         # Some optional arguments that will be passed to the BaseExecutor if specified
         base_kwargs = {key: self.kwargs[key] for key in self.kwargs if key in ["conda_env", "cache_dir", "current_env_on_conda_fail",]}
 
-        # Call the BaseExecutor initialization
+        # Call the BaseAsyncExecutor initialization
         super().__init__(**base_kwargs)
     
-    def run(self, function: Callable, args: List, kwargs: Dict, task_metadata: Dict) -> Any:
+    async def run(self, function: Callable, args: List, kwargs: Dict, task_metadata: Dict) -> Any:
         """
         Run the function howsoever desired. It might be on a remote machine,
         might be by making changes to the args or kwargs, etc.
@@ -87,11 +87,11 @@ class CustomExecutor(BaseExecutor):
 
         # Other custom operations can be applied here.
         if result is not None:
-            result = self.helper_function(result)
+            result = await self.helper_function(result)
 
         return result
 
-    def helper_function(self, result):
+    async def helper_function(self, result):
         """An example helper function."""
 
         return 2 * result
