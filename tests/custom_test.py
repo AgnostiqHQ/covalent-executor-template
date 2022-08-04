@@ -18,24 +18,27 @@
 #
 # Relief from the License may be granted by purchasing a commercial license.
 
-"""Tests for Covalent custom executor."""
-
-from multiprocessing import Queue as MPQ
+"""Tests for Covalent custom async executor."""
 
 import covalent as ct
 from covalent._workflow.transport import TransportableObject
-from covalent.executor import CustomExecutor
+import covalent._results_manager.results_manager as rm
+from covalent_executor_template.custom import CustomExecutor
+from functools import partial
+from covalent.executor.base import wrapper_fn
 
 
 def test_init():
     """Test that initialization properly sets member variables."""
 
-    executor = CustomExecutor(
-        executor_input1 = "input1",
-        executor_input2 = 5,
-        kwarg = "custom param",
-        current_env_on_conda_fail = True,
-    )
+    arguments = {
+        "executor_input1": "input1",
+        "executor_input2": 5,
+        "kwarg": "custom param",
+        "current_env_on_conda_fail": True,
+    }
+
+    executor = CustomExecutor(**arguments)
 
     assert executor.executor_input1 == "input1"
     assert executor.executor_input2 == 5
@@ -43,73 +46,85 @@ def test_init():
     assert executor.current_env_on_conda_fail == True
 
 def test_deserialization(mocker):
-    """Test that the input function is deserialized."""
+    """Test that the input function and its arguments are deserialized."""
 
-    executor = CustomExecutor(
-        executor_input1 = "input1",
-    )
+    executor = CustomExecutor(executor_input1="input1")
 
-    def simple_task(x):
+    def simple_task(x, kw):
         return x
 
-    transport_function = TransportableObject(simple_task)
-    deserizlized_mock = mocker.patch.object(
-        transport_function,
+    transportable_func = TransportableObject(simple_task)
+    input_function = partial(wrapper_fn, transportable_func, [], [])
+    arg = TransportableObject(5)
+    args = [arg]
+    kwarg = TransportableObject(None)
+    kwargs = {"kw": kwarg}
+
+    deserialized_func_mock = mocker.patch.object(
+        transportable_func,
         "get_deserialized",
         return_value = simple_task,
     )
 
-    executor.execute(
-        function = transport_function,
-        args = [5],
-        kwargs = {},
-        info_queue = MPQ(),
-        task_id = 0,
-        dispatch_id = 0,
-        results_dir = "./",
+    deserialized_args_mock = mocker.patch.object(
+        arg,
+        "get_deserialized",
+        return_value=[5],
+    )
+    
+    deserialized_kwargs_mock = mocker.patch.object(
+        kwarg,
+        "get_deserialized",
+        return_value={},
     )
 
-    deserizlized_mock.assert_called_once()
+    executor.run(
+        function=input_function,
+        args=args,
+        kwargs=kwargs,
+        task_metadata={"dispatch_id": 0, "node_id": 0},
+    )
+
+    deserialized_func_mock.assert_called_once()
+    deserialized_args_mock.assert_called_once()
+    deserialized_kwargs_mock.assert_called_once()
 
 def test_function_call(mocker):
     """Test that the deserialized function is called with correct arguments."""
 
-    executor = CustomExecutor(
-        executor_input1 = "input1",
-    )
+    executor = CustomExecutor(executor_input1="input1")
 
     simple_task = mocker.MagicMock(return_value=0)
     simple_task.__name__ = "simple_task"
 
     transport_function = TransportableObject(simple_task)
 
-    # This mock is so that the call to execute uses the same simple_task object that we
-    # want to make sure is called.
-    mocker.patch.object(transport_function, "get_deserialized", return_value = simple_task)
-
-    args = [5]
-    kwargs = {"kw_arg": 10}
-    executor.execute(
-        function = transport_function,
-        args = args,
-        kwargs = kwargs,
-        info_queue = MPQ(),
-        task_id = 0,
-        dispatch_id = 0,
-        results_dir = "./",
+    deserialized_func_mock = mocker.patch.object(
+        transport_function,
+        "get_deserialized",
+        return_value = simple_task,
     )
 
-    simple_task.assert_called_once_with(5, kw_arg = 10)
+    args = [TransportableObject(5)]
+    kwargs = {"kw_arg": TransportableObject(10)}
+
+    executor.run(
+        function = partial(wrapper_fn, transport_function, [], []),
+        args = args,
+        kwargs = kwargs,
+        task_metadata={"dispatch_id": 0, "node_id": 0},
+    )
+
+    deserialized_func_mock.assert_called_once()
+    simple_task.assert_called_once_with(5, kw_arg=10)
 
 def test_final_result():
     """Functional test to check that the result of the function execution is as expected."""
 
 
-    executor = ct.executor.CustomExecutor(
-        executor_input1 = "input1",
-    )
+    executor = CustomExecutor(executor_input1="input1")
 
-    @ct.electron(executor = executor)
+    @ct.electron(executor=executor)
     def simple_task(x):
         return x
 
@@ -122,6 +137,8 @@ def test_final_result():
     print(dispatch_id)
     result = ct.get_result(dispatch_id=dispatch_id, wait=True)
     print(result)
+
+    rm._delete_result(dispatch_id)
 
     # The custom executor has a doubling of each electron's result, for illustrative purporses.
     assert result.result == 10

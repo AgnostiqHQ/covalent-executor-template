@@ -29,9 +29,13 @@ from covalent._results_manager.result import Result
 # All executor plugins inherit either from the `BaseExecutor` class, or the `BaseAsyncExecutor` class.
 from covalent.executor.base import BaseAsyncExecutor
 
+# Importing TransportableObject to re-serialize the result for further processing by dispatcher
+from covalent._workflow.transport import TransportableObject
+
 # The plugin class name must be given by the EXECUTOR_PLUGIN_NAME attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
 EXECUTOR_PLUGIN_NAME = "CustomAsyncExecutor"
+executor_plugin_name = "CustomAsyncExecutor"
 
 _EXECUTOR_PLUGIN_DEFAULTS = {
     "executor_input1": "",
@@ -93,8 +97,9 @@ class CustomAsyncExecutor(BaseAsyncExecutor):
 
     async def helper_function(self, result):
         """An example helper function."""
-
-        return 2 * result
+        # Deserializing the result here - which will require its dependencies
+        # installed on this environment and then re-serializing for further processing
+        return TransportableObject(2 * result.get_deserialized())
 
     def get_status(self, info_dict: dict) -> Result:
         """
