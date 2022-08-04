@@ -5,11 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASED]
+## [0.3.0] - 2022-08-04
 
-## Changed
+### Added
 
-- CHANGE FOR PR CREATION
+- `CustomAsyncExecutor` added with analogous examples to `CustomExecutor`.
+- Tests for this executor were also added.
+- `.gitignore` added similar to other executor repos.
+
+### Changed
+
+- `CustomExecutor` is now updated to reflect latest changes made to `BaseExecutor`.
+
+### Fixed
+
+- Tests file name changed from `**tests.py` to `**test.py` as it wasn't getting detected by pytest earlier.
+- Duplicate entry of `pytest-asyncio` in requirements fixed.
 
 ## [0.2.2] - 2022-04-14
 
