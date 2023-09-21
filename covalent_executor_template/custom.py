@@ -2,35 +2,31 @@
 #
 # This file is part of Covalent.
 #
-# Licensed under the GNU Affero General Public License 3.0 (the "License").
-# A copy of the License may be obtained with this software package or at
+# Licensed under the Apache License 2.0 (the "License"). A copy of the
+# License may be obtained with this software package or at
 #
-#      https://www.gnu.org/licenses/agpl-3.0.en.html
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
-# Use of this file is prohibited except in compliance with the License. Any
-# modifications or derivative works of this file must retain this copyright
-# notice, and modified files must contain a notice indicating that they have
-# been altered from the originals.
-#
-# Covalent is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the License for more details.
-#
-# Relief from the License may be granted by purchasing a commercial license.
+# Use of this file is prohibited except in compliance with the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """This is an example of a custom Covalent executor plugin."""
 
 # For type-hints
-from typing import Any, Dict, List, Callable
+from typing import Any, Callable, Dict, List
 
 # The current status of the execution can be kept up-to-date with Covalent Result objects.
 from covalent._results_manager.result import Result
 
-# All executor plugins inherit either from the `BaseExecutor` class, or the `BaseAsyncExecutor` class.
-from covalent.executor.base import BaseExecutor
-
 # Importing TransportableObject to re-serialize the result for post processing
 from covalent._workflow.transport import TransportableObject
+
+# All executor plugins inherit either from the `BaseExecutor` class, or the `BaseAsyncExecutor` class.
+from covalent.executor.base import BaseExecutor
 
 # The plugin class name must be given by the EXECUTOR_PLUGIN_NAME attribute. In case this
 # module has more than one class defined, this lets Covalent know which is the executor class.
@@ -54,11 +50,20 @@ class CustomExecutor(BaseExecutor):
         self.kwargs = kwargs
 
         # Some optional arguments that will be passed to the BaseExecutor if specified
-        base_kwargs = {key: self.kwargs[key] for key in self.kwargs if key in ["conda_env", "cache_dir", "current_env_on_conda_fail",]}
+        base_kwargs = {
+            key: self.kwargs[key]
+            for key in self.kwargs
+            if key
+            in [
+                "conda_env",
+                "cache_dir",
+                "current_env_on_conda_fail",
+            ]
+        }
 
         # Call the BaseExecutor initialization
         super().__init__(**base_kwargs)
-    
+
     def run(self, function: Callable, args: List, kwargs: Dict, task_metadata: Dict) -> Any:
         """
         Run the function howsoever desired. It might be on a remote machine,
